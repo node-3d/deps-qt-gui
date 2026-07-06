@@ -10,10 +10,10 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 npm install @node-3d/deps-qt-gui
 ```
 
-This dependency package is distributing **Qt Gui 6.8.0**
-binaries through **NPM** for **Node.js** addons.
+This dependency package distributes **Qt Gui 6.8.0**
+binaries through **npm** for **Node.js** addons.
 
-* Platforms (x64): Windows, Linux, Linux ARM, MacOS ARM.
+* Platforms: Windows x64, Linux x64, Linux ARM64, macOS ARM64.
 * Libraries: Qt Gui.
 * Linking: dynamic dll-type.
 
@@ -124,7 +124,7 @@ via dynamic linking of the library.
 These **terms and conditions** allow using (unmodified) Qt as a
 shared library (DLL), in a closed-source project.
 
-Qt licensing information (a COPY) is given in a [separate file](/QT_LGPL),
+Qt licensing information (a copy) is given in a [separate file](QT_LGPL),
 which also can be found on
 [Qt's official web-site](http://doc.qt.io/qt-6/lgpl.html).
 
