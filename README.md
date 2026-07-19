@@ -10,18 +10,7 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 npm install @node-3d/deps-qt-gui
 ```
 
-## Binary Origin
 
-Release archives are built by this repository's public GitHub Actions workflows.
-
-Attestations: https://github.com/node-3d/deps-qt-gui/attestations
-
-To verify a downloaded archive:
-
-```bash
-gh release download <tag> -R node-3d/deps-qt-gui -p <platform>.gz
-gh attestation verify <platform>.gz -R node-3d/deps-qt-gui
-```
 
 This dependency package distributes **Qt Gui 6.8.0**
 binaries through **npm** for **Node.js** addons.
@@ -146,3 +135,16 @@ The binaries were extracted from installed copy of the framework.
 ---
 
 The rest of this package is MIT licensed.
+
+## Binary Origin
+
+Release archives are built by this repository's public GitHub Actions workflows.
+
+Attestations: https://github.com/node-3d/deps-qt-gui/attestations
+
+To verify a downloaded archive:
+
+```bash
+gh release download <tag> -R node-3d/deps-qt-gui -p <platform>.gz
+gh attestation verify <platform>.gz -R node-3d/deps-qt-gui
+```
