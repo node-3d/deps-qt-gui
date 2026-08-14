@@ -11,6 +11,11 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
 jobs:
   create_release:
     name: Create Release
@@ -41,7 +46,7 @@ jobs:
           fi
           echo "version=$release_tag" >> "$GITHUB_OUTPUT"
 
-      - name: Create Draft Release
+      - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v3
         env:
@@ -51,10 +56,54 @@ jobs:
           name: Release ${{ steps.package-version.outputs.version }}
 
   build:
-    name: Fetch Qt Binaries
+    name: Fetch Qt Binaries (${{ matrix.target }})
+    needs: create_release
     strategy:
-        matrix:
-          os: [ubuntu-22.04, windows-2022, macos-26]
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            os: ubuntu-22.04
+            node_arch: x64
+            qt_host: linux
+            qt_arch: linux_gcc_64
+            qt_dir: gcc_64
+            archive: linux
+          - target: linux-arm64
+            os: ubuntu-22.04-arm
+            node_arch: arm64
+            qt_host: linux_arm64
+            qt_arch: linux_gcc_arm64
+            qt_dir: gcc_arm64
+            archive: aarch64
+          - target: darwin-x64
+            os: macos-26-intel
+            node_arch: x64
+            qt_host: mac
+            qt_arch: clang_64
+            qt_dir: macos
+            archive: osx
+          - target: darwin-arm64
+            os: macos-26
+            node_arch: arm64
+            qt_host: mac
+            qt_arch: ''
+            qt_dir: macos
+            archive: darwin-arm64
+          - target: windows-x64
+            os: windows-2022
+            node_arch: x64
+            qt_host: windows
+            qt_arch: win64_msvc2022_64
+            qt_dir: msvc2022_64
+            archive: windows
+          - target: windows-arm64
+            os: windows-11-arm
+            node_arch: arm64
+            qt_host: windows_arm64
+            qt_arch: win64_msvc2022_arm64
+            qt_dir: msvc2022_arm64
+            archive: win32-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -65,18 +114,38 @@ jobs:
           persist-credentials: false
 
       - name: Install Qt
-        if: matrix.os == 'ubuntu-22.04' || matrix.os == 'macos-26' || matrix.os == 'windows-2022'
+        if: matrix.qt_arch != ''
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.8.0'
+          host: ${{ matrix.qt_host }}
+          target: desktop
+          arch: ${{ matrix.qt_arch }}
           cache: 'true'
-          cache-key-prefix: 'install-qt-${{ matrix.os }}'
+          cache-key-prefix: install-qt-${{ matrix.target }}
+
+      - name: Install Qt
+        if: matrix.qt_arch == ''
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.0'
+          host: ${{ matrix.qt_host }}
+          target: desktop
+          cache: 'true'
+          cache-key-prefix: install-qt-${{ matrix.target }}
 
       - name: Install Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24.13.0
+          architecture: ${{ matrix.node_arch }}
           cache: 'npm'
+
+      - name: Print Native Target
+        run: |
+          echo "runner=$(uname -s)-$(uname -m)"
+          node -p "'node=' + process.version + ' platform=' + process.platform + ' arch=' + process.arch"
+          npm config get arch
 
       - name: Get Package Version
         id: package-version
@@ -99,31 +168,45 @@ jobs:
           src/qt-mkdir.sh ${{ env.QT_TMP }}
 
       - name: Copy Qt Dir - Linux
-        if: matrix.os == 'ubuntu-22.04'
+        if: startsWith(matrix.target, 'linux-')
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq patchelf
-          echo "OS_NAME=linux" >> $GITHUB_ENV
+          echo "OS_NAME=${{ matrix.archive }}" >> $GITHUB_ENV
           chmod +x src/qt-copy-linux.sh
-          src/qt-copy-linux.sh ${{ env.QT_TMP }} ${{ github.workspace }}/../Qt/6.8.0/gcc_64
+          src/qt-copy-linux.sh ${{ env.QT_TMP }} ${{ github.workspace }}/../Qt/6.8.0/${{ matrix.qt_dir }}
 
-      - name: Copy Qt Dir - MacOS ARM
-        if: matrix.os == 'macos-26'
+      - name: Copy Qt Dir - MacOS
+        if: startsWith(matrix.target, 'darwin-')
         run: |
-          echo "OS_NAME=darwin-arm64" >> $GITHUB_ENV
+          echo "OS_NAME=${{ matrix.archive }}" >> $GITHUB_ENV
           chmod +x src/qt-copy-macos.sh
-          src/qt-copy-macos.sh ${{ env.QT_TMP }} ${{ github.workspace }}/../Qt/6.8.0/macos
+          src/qt-copy-macos.sh ${{ env.QT_TMP }} ${{ github.workspace }}/../Qt/6.8.0/${{ matrix.qt_dir }}
 
       - name: Copy Qt Dir - Windows
-        if: matrix.os == 'windows-2022'
+        if: startsWith(matrix.target, 'windows-')
         run: |
-          echo "OS_NAME=windows" >> $GITHUB_ENV
-          src/qt-copy-windows.sh '${{ env.QT_TMP }}' '${{ github.workspace }}\..\Qt\6.8.0\msvc2022_64'
+          echo "OS_NAME=${{ matrix.archive }}" >> $GITHUB_ENV
+          src/qt-copy-windows.sh '${{ env.QT_TMP }}' '${{ github.workspace }}\..\Qt\6.8.0\${{ matrix.qt_dir }}'
 
       - name: Pack Libs
+        id: pack-files
         run: |
           cd '${{ env.QT_TMP }}'
-          tar -czf ../${{ env.OS_NAME }}.gz *
+          PACK_DIR='${{ github.workspace }}'
+          PACK_DIR="${PACK_DIR//'\'/"/"}"
+          PACK_PATH="$PACK_DIR/${{ env.OS_NAME }}.gz"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            tar --force-local -czf "$PACK_PATH" *
+          else
+            tar -czf "$PACK_PATH" *
+          fi
+          echo "pack=$PACK_PATH" >> $GITHUB_OUTPUT
+
+      - name: Attest Binary
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ steps.pack-files.outputs.pack }}
 
       - name: Store Binaries
         uses: softprops/action-gh-release@v3
@@ -132,4 +215,4 @@ jobs:
         with:
           tag_name: ${{ steps.package-version.outputs.version }}
           name: Release ${{ steps.package-version.outputs.version }}
-          files: ${{ env.QT_TMP }}/../${{ env.OS_NAME }}.gz
+          files: ${{ steps.pack-files.outputs.pack }}

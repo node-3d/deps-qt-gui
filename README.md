@@ -15,7 +15,7 @@ npm install @node-3d/deps-qt-gui
 This dependency package distributes **Qt Gui 6.8.0**
 binaries through **npm** for **Node.js** addons.
 
-* Platforms: Windows x64, Linux x64/ARM64, macOS ARM64.
+* Platforms: Windows x64/ARM64, Linux x64/ARM64, macOS x64/ARM64.
 * Libraries: Qt Gui.
 * Linking: dynamic dll-type.
 
