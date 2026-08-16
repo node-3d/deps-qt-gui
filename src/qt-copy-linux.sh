@@ -43,7 +43,6 @@ patchelf --force-rpath --set-rpath '$$ORIGIN/../..' $1/plugins/platforms/libqway
 cp $2/plugins/platforms/libqxcb.so $1/plugins/platforms/libqxcb.so
 patchelf --force-rpath --set-rpath '$$ORIGIN/../..' $1/plugins/platforms/libqxcb.so
 
-plugins/xcbglintegrations/libqxcb-egl-integration.so
 cp $2/plugins/xcbglintegrations/libqxcb-egl-integration.so $1/plugins/xcbglintegrations/libqxcb-egl-integration.so
 patchelf --force-rpath --set-rpath '$$ORIGIN/../..' $1/plugins/xcbglintegrations/libqxcb-egl-integration.so
 

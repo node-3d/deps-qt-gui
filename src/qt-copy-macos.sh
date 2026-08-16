@@ -29,3 +29,14 @@ cp $2/plugins/imageformats/libqjpeg.dylib $1/plugins/imageformats/libqjpeg.dylib
 cp $2/plugins/imageformats/libqsvg.dylib $1/plugins/imageformats/libqsvg.dylib
 cp $2/plugins/platforms/libqcocoa.dylib $1/plugins/platforms/libqcocoa.dylib
 cp $2/plugins/platforms/libqoffscreen.dylib $1/plugins/platforms/libqoffscreen.dylib
+
+for framework in "$1"/*.framework; do
+	name="$(basename "$framework" .framework)"
+	current="$framework/Versions/Current/$name"
+	version_a="$framework/Versions/A/$name"
+
+	if [ -f "$current" ] && [ ! -f "$version_a" ]; then
+		mkdir -p "$framework/Versions/A"
+		cp "$current" "$version_a"
+	fi
+done
