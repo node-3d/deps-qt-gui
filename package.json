@@ -1,7 +1,7 @@
 {
 	"author": "Luis Blanco <luisblanco1337@gmail.com>",
 	"name": "@node-3d/deps-qt-gui",
-	"version": "5.0.1",
+	"version": "5.0.2",
 	"description": "Qt Gui dynamic libraries for dependent Node.js addons",
 	"license": "MIT",
 	"main": "index.js",
@@ -52,8 +52,8 @@
 		"url": "git+https://github.com/node-3d/deps-qt-gui.git"
 	},
 	"dependencies": {
-		"@node-3d/addon-tools": "~10.1.0",
-		"@node-3d/deps-qt-core": "~5.0.1"
+		"@node-3d/addon-tools": "~10.2.0",
+		"@node-3d/deps-qt-core": "~5.0.2"
 	},
 	"devDependencies": {
 		"oxlint": "1.85.0",
