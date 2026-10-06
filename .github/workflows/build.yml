@@ -229,7 +229,13 @@ jobs:
         run: npm run build
       - name: Run Packed Consumer Tests
         working-directory: ${{ steps.consumer.outputs.directory }}
-        run: npm test
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            core_bin="$(node -p "require('@node-3d/deps-qt-gui').core.bin")"
+            gui_bin="$(node -p "require('@node-3d/deps-qt-gui').bin")"
+            export LD_LIBRARY_PATH="$core_bin:$gui_bin${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          fi
+          npm test
 
   release:
     name: Create Release
