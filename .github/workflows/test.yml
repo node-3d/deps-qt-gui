@@ -175,6 +175,11 @@ jobs:
         with:
           node-version: 24.13.0
           architecture: ${{ matrix.node_arch }}
+      - name: Install Qt GUI runtime - Linux
+        if: startsWith(matrix.target, 'linux-')
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq libegl1
       - name: Install Packed Consumer Candidate
         id: consumer
         uses: node-3d/addon-tools/actions/consumer-install@1073c0a6403f6c20df2135f03950a568e865aa16
